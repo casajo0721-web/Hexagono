@@ -89,10 +89,10 @@ const MAXW=8.4,ACC=24;
 
 // Sin nombres: solo dificultad + canción + fondo
 const MODES=[
- {id:'easy',diff:'FÁCIL',stars:1,song:'La coin es un sentimiento',img:'bg1.jpg',aud:'m1.m4a',c:42,hue:42,spd0:260,gain:2,cap:70,rot0:.55,rotG:.008,flip:[7,13],rotK:2,sT0:.7,sT1:.55,warm:6,w:[.45,.75,.95,1],beat:.6,spin:.10},
- {id:'normal',diff:'NORMAL',stars:2,song:'Hydrogen',img:'bg2.jpg',aud:'m2.m4a',c:320,hue:320,spd0:310,gain:3.4,cap:90,rot0:.7,rotG:.015,flip:[5,12],rotK:2,sT0:.62,sT1:.42,warm:8,w:[.3,.55,.75,.9],beat:.5,spin:.13},
- {id:'hard',diff:'DIFÍCIL',stars:3,song:'I LOVE YOU HOE (w/ 9lives)',img:'bg3.jpg',aud:'m3.m4a',c:215,hue:215,spd0:370,gain:4.2,cap:90,rot0:.95,rotG:.018,flip:[4,9],rotK:2.5,sT0:.56,sT1:.38,warm:4,w:[.2,.45,.65,.85],beat:.42,spin:.18},
- {id:'extreme',diff:'HARDCORE',stars:4,song:'Blade',img:'bg4.jpg',aud:'m4.m4a',c:352,hue:352,spd0:420,gain:5,cap:90,rot0:1.2,rotG:.022,flip:[2.5,6],rotK:4,sT0:.5,sT1:.34,warm:3,w:[.15,.4,.6,.8],beat:.4,spin:.26,wob:1,strobe:1}
+ {id:'easy',diff:'FÁCIL',stars:1,song:'La coin es un sentimiento',img:'bg1.jpg',aud:'m1.mp3',c:42,hue:42,spd0:260,gain:2,cap:70,rot0:.55,rotG:.008,flip:[7,13],rotK:2,sT0:.7,sT1:.55,warm:6,w:[.45,.75,.95,1],beat:.6,spin:.10},
+ {id:'normal',diff:'NORMAL',stars:2,song:'Hydrogen',img:'bg2.jpg',aud:'m2.mp3',c:320,hue:320,spd0:310,gain:3.4,cap:90,rot0:.7,rotG:.015,flip:[5,12],rotK:2,sT0:.62,sT1:.42,warm:8,w:[.3,.55,.75,.9],beat:.5,spin:.13},
+ {id:'hard',diff:'DIFÍCIL',stars:3,song:'I LOVE YOU HOE (w/ 9lives)',img:'bg3.jpg',aud:'m3.mp3',c:215,hue:215,spd0:370,gain:4.2,cap:90,rot0:.95,rotG:.018,flip:[4,9],rotK:2.5,sT0:.56,sT1:.38,warm:4,w:[.2,.45,.65,.85],beat:.42,spin:.18},
+ {id:'extreme',diff:'HARDCORE',stars:4,song:'Blade',img:'bg4.jpg',aud:'m4.mp3',c:352,hue:352,spd0:420,gain:5,cap:90,rot0:1.2,rotG:.022,flip:[2.5,6],rotK:4,sT0:.5,sT1:.34,warm:3,w:[.15,.4,.6,.8],beat:.4,spin:.26,wob:1,strobe:1}
 ];
 const MENU={hue:280,c:280,spd0:300,gain:0,cap:1,rot0:.6,rotG:0,flip:[5,12],rotK:2,sT0:.62,sT1:.5,warm:0,w:[.3,.55,.75,.9],beat:.5,spin:.08};
 MODES.forEach(m=>{m.im=new Image();m.im.src=m.img});
