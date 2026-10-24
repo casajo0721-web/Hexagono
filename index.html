@@ -96,6 +96,8 @@ const MODES=[
  {id:'hard',diff:'DIFÍCIL',stars:3,song:'I LOVE YOU HOE (w/ 9lives)',img:'bg3.jpg',aud:'m3.mp3',c:215,hue:215,spd0:370,gain:4.2,cap:90,rot0:.95,rotG:.018,flip:[4,9],rotK:2.5,sT0:.56,sT1:.38,warm:4,w:[.2,.45,.65,.85],beat:.42,spin:.18},
  {id:'extreme',diff:'HARDCORE',stars:4,song:'Blade',img:'bg4.jpg',aud:'m4.mp3',c:352,hue:352,spd0:420,gain:5,cap:90,rot0:1.2,rotG:.022,flip:[2.5,6],rotK:4,sT0:.5,sT1:.34,warm:3,w:[.15,.4,.6,.8],beat:.4,spin:.26,wob:1,strobe:1}
 ];
+// luces de la discoteca (modo Blade): rojo sangre, blanco, rosa, naranja
+const LC=[[255,20,50],[255,20,50],[255,255,255],[255,40,110],[255,20,50],[255,110,20],[255,20,50],[255,255,255]];
 const MENU={hue:280,c:280,spd0:300,gain:0,cap:1,rot0:.6,rotG:0,flip:[5,12],rotK:2,sT0:.62,sT1:.5,warm:0,w:[.3,.55,.75,.9],beat:.5,spin:.08};
 MODES.forEach(m=>{m.im=new Image();m.im.src=m.img});
 
@@ -138,6 +140,7 @@ function beatDetect(){
 // ---- estado
 let mode=MENU,lastMode=MODES[1],state='menu',pending=null;
 let t=20,clock=0,theta=0,omega=0,rot=0,rv=0,dir=1,dirT=8,walls=[],lastGap=0,deadT=0,overShown=false,bgAng=0,strobe=0,lastStrobe=0;
+let lamps=[],strobeRed=false;
 let shake=0,pulse=0,beatT=0,newRec=false,lvl=0,flash=0,msg='',dfl=0,recShown=false,inL=0,inR=0,trail=[];
 const keys={l:0,r:0},touches=new Map();
 const show=(el,on)=>el.classList.toggle('hide',!on);
@@ -150,11 +153,12 @@ function renderModes(){
   $('snd').textContent=muted?'🔇 Sonido: OFF':'🔊 Sonido: ON';
   $('fxb').textContent=fx?'💡 Luces: ON':'💡 Luces: OFF';
 }
-function toMenu(){state='menu';mode=MENU;t=20;walls=[];trail=[];strobe=0;touches.clear();stopMusic();
+function toMenu(){state='menu';mode=MENU;lamps=[];t=20;walls=[];trail=[];strobe=0;touches.clear();stopMusic();
   show($('menu'),1);show($('over'),0);show($('pause'),0);show($('pbtn'),0);show($('warn'),0);renderModes()}
 function start(m,ok){
   if(m.strobe&&fx&&!warned&&!ok){pending=m;show($('warn'),1);return}
   mode=lastMode=m;state='play';t=0;theta=0;omega=0;walls=[];trail=[];lastGap=0;newRec=false;recShown=false;lvl=0;flash=0;strobe=0;
+  lamps=[];if(m.strobe)for(let i=0;i<8;i++)lamps.push({a:i*TAU/8+Math.random()*.4,c:LC[i%LC.length],on:false,v:0,next:clock+Math.random()*.6});
   dir=Math.random()<.5?-1:1;dirT=m.flip[0];rv=0;touches.clear();
   show($('menu'),0);show($('over'),0);show($('pause'),0);show($('warn'),0);show($('pbtn'),1);playMusic(m)}
 function die(){state='dead';deadT=0;shake=1;dfl=1;overShown=false;strobe=0;touches.clear();show($('pbtn'),0);
@@ -209,8 +213,11 @@ function update(dt){
   let beat=false;
   if(state==='play'&&usingAn())beat=beatDetect();
   else{beatT+=dt;if(beatT>(mode.beat||.5)){beatT=0;beat=true}}
-  if(beat){pulse=1;if(mode.strobe&&fx&&state==='play'&&clock-lastStrobe>.3){strobe=1;lastStrobe=clock}}
+  if(beat){pulse=1;if(mode.strobe&&fx&&state==='play'&&clock-lastStrobe>.3){strobe=1;lastStrobe=clock;strobeRed=!strobeRed}}
   pulse=Math.max(0,pulse-dt*4);strobe=Math.max(0,strobe-dt*6.5);flash=Math.max(0,flash-dt*1.6);shake=Math.max(0,shake-dt*3);dfl=Math.max(0,dfl-dt*3);
+  for(const l of lamps){ // cada foco se prende y se apaga por su cuenta
+    if(state==='play'&&fx&&clock>=l.next){l.on=!l.on;l.next=clock+.25+Math.random()*.65}
+    const tg=state==='play'&&fx&&l.on?1:0;l.v+=(tg-l.v)*Math.min(1,dt*(tg?40:14))}
   inL=keys.l||[...touches.values()].includes('l')?1:0;inR=keys.r||[...touches.values()].includes('r')?1:0;
   if(state==='play'){
     let r=dt;while(r>1e-6&&state==='play'){const s=Math.min(r,1/120);stepPlay(s);r-=s}
@@ -233,6 +240,23 @@ const V=(a,r)=>[Math.cos(a)*r,Math.sin(a)*r];
 function ring(a0,a1,d0,d1,fill){const k=1/Math.cos(SIDE/2);poly([V(a0,d0*k),V(a1,d0*k),V(a1,d1*k),V(a0,d1*k)],fill)}
 let lastH=-1;
 
+function drawLights(){
+  const cx=W/2,cy=H/2,R=Math.hypot(W,H)*.5,rad=Math.min(W,H)*.6;
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  lamps.forEach((l,i)=>{
+    if(l.v<.02)return;
+    const x=cx+Math.cos(l.a)*R*.85,y=cy+Math.sin(l.a)*R*.85,[r,g,b]=l.c;
+    const g1=ctx.createRadialGradient(x,y,0,x,y,rad);
+    g1.addColorStop(0,`rgba(${r},${g},${b},${.55*l.v})`);g1.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    ctx.fillStyle=g1;ctx.fillRect(0,0,W,H);
+    const ba=l.a+Math.PI+Math.sin(clock*(.8+i*.13)+i)*.9,len=R*2.2,hw=.07,x2=x+Math.cos(ba)*len,y2=y+Math.sin(ba)*len;
+    const g2=ctx.createLinearGradient(x,y,x2,y2);
+    g2.addColorStop(0,`rgba(${r},${g},${b},${.4*l.v})`);g2.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    ctx.fillStyle=g2;ctx.beginPath();ctx.moveTo(x,y);
+    ctx.lineTo(x+Math.cos(ba-hw)*len,y+Math.sin(ba-hw)*len);ctx.lineTo(x+Math.cos(ba+hw)*len,y+Math.sin(ba+hw)*len);ctx.closePath();ctx.fill();
+  });
+  ctx.restore();
+}
 function draw(){
   const hue=(mode.hue+Math.sin(clock*.35)*25+360)%360,s=strobe,col=`hsl(${hue},90%,${Math.round(58-s*52)}%)`;
   if((hue|0)!==lastH){lastH=hue|0;document.documentElement.style.setProperty('--h',lastH)}
@@ -246,7 +270,8 @@ function draw(){
     ctx.drawImage(im,(iw-ss)/2,(ih-ss)/2,ss,ss,-D/2,-D/2,D,D);ctx.restore();
     ctx.fillStyle=`rgba(4,2,10,${mode.strobe?.8:.72})`;ctx.fillRect(0,0,W,H);
   }
-  if(s>0){ctx.fillStyle=`hsla(${hue},25%,97%,${s*.95})`;ctx.fillRect(0,0,W,H)}
+  if(s>0){ctx.fillStyle=strobeRed?`hsla(355,92%,52%,${s*.92})`:`hsla(${hue},25%,97%,${s*.95})`;ctx.fillRect(0,0,W,H)}
+  if(lamps.length)drawLights();
   ctx.save();
   const sh=shake*8;
   ctx.translate(W/2+(Math.random()-.5)*sh,H/2+(Math.random()-.5)*sh);
