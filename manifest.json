@@ -1,16 +1,30 @@
 {
+  "id": "/hexrush-app",
   "name": "HEXRUSH",
   "short_name": "HEXRUSH",
   "description": "Sobrevive el mayor tiempo posible en el hexágono infinito.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",
-  "display_override": ["fullscreen", "standalone"],
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
   "orientation": "any",
   "background_color": "#0b0614",
   "theme_color": "#0b0614",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
