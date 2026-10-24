@@ -45,6 +45,7 @@ h1{margin:4vh 0 2px;font-size:clamp(42px,13vw,76px);font-weight:900;letter-spaci
 #pause .btn,#warn .btn{width:240px;margin:5px 0}
 #warn .box{max-width:360px;text-align:center;line-height:1.5}
 #warn h2{margin:0 0 8px;color:#ffd24a}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;z-index:9;max-width:88%;text-align:center;line-height:1.4}
 #pbtn{position:fixed;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);width:42px;height:42px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);background:rgba(0,0,0,.35);color:#fff;font-size:14px;cursor:pointer}
 </style></head><body>
 <canvas id="c"></canvas><div id="sat"></div>
@@ -58,6 +59,7 @@ h1{margin:4vh 0 2px;font-size:clamp(42px,13vw,76px);font-weight:900;letter-spaci
   <p class="credit">Hecho por <b id="creator"></b></p>
 </div>
 
+<div id="toast" class="hide"></div>
 <button id="pbtn" class="hide">❚❚</button>
 
 <div id="pause" class="ov hide">
@@ -109,16 +111,22 @@ const store=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 
 // ---- audio (música + análisis de graves para sincronizar pulsos y luces)
 let ac,analyser,fdata,curA=null;const aud={};
+const iOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const canAn=location.protocol!=='file:'&&!(iOS&&!('audioSession' in navigator)); // en iPhone viejo se evita Web Audio (el interruptor de silencio lo mutea)
+try{navigator.audioSession.type='playback'}catch(e){}
+let toastT;function toast(m){const e=$('toast');e.textContent=m;show(e,1);clearTimeout(toastT);toastT=setTimeout(()=>show(e,0),5000)}
 const getAC=()=>{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac};
 function beep(f,d=.1,type='square',v=.06){if(muted)return;try{const a=getAC(),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+d)}catch(e){}}
 function playMusic(m){
   stopMusic();let a=aud[m.id];
   if(!a){a=new Audio(m.aud);a.loop=true;a.preload='auto';aud[m.id]=a;
-    if(location.protocol!=='file:'){try{const c=getAC(),src=c.createMediaElementSource(a);
+    if(canAn){try{const c=getAC(),src=c.createMediaElementSource(a);
       if(!analyser){analyser=c.createAnalyser();analyser.fftSize=512;analyser.smoothingTimeConstant=.4;analyser.connect(c.destination);fdata=new Uint8Array(analyser.frequencyBinCount)}
       src.connect(analyser)}catch(e){}}}
   try{getAC()}catch(e){}
-  a.muted=muted;a.playbackRate=1;a.preservesPitch=a.webkitPreservesPitch=true;a.currentTime=0;a.play().catch(()=>{});curA=a;bavg=0;lastBeat=0;
+  a.onerror=()=>toast('No se pudo cargar la canción ('+m.aud+'). Revisa que esté subida a GitHub con ese nombre.');
+  a.muted=muted;a.playbackRate=1;a.preservesPitch=a.webkitPreservesPitch=true;try{a.currentTime=0}catch(e){}
+  a.play().catch(err=>{if(!err||err.name!=='AbortError')toast('No se pudo reproducir la música ('+(err&&err.name||'error')+')')});curA=a;bavg=0;lastBeat=0;
 }
 function stopMusic(){if(curA){curA.pause();curA.playbackRate=1}curA=null}
 let bavg=0,lastBeat=0;
